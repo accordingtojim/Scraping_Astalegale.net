@@ -6,6 +6,7 @@ import json
 import mimetypes
 import re
 
+
 def load_province_map(json_file_path):
     try:
         with open(json_file_path, 'r', encoding='utf-8') as file:
@@ -113,9 +114,10 @@ def extract_auction_details(url, save_directory):
     indirizzo_element = soup.find('span', {'data-pn-indirizzo-via': 'val'})
     indirizzo = indirizzo_element.text.strip() if indirizzo_element else 'Indirizzo non trovato'
 
-        # Funzione di supporto per correggere il valore del lotto
+    # Funzione di supporto per correggere il valore del lotto
     def clean_lotto(value):
-        return 1 if value.strip().lower() == "unico" else value
+        value = value.strip().lower()
+        return 1 if value in ["unico", "LOTTO UNICO", "lotto unico"] else value
 
     # Estrarre e pulire il lotto
     lotto_element = soup.find('span', text='Lotto')
@@ -223,6 +225,7 @@ def extract_auction_details(url, save_directory):
     numero_aste_vuote = len(storico_aste)
     
     auction_id = f"asta_{indirizzo.replace('-', '').replace('  ', ' ').replace(' ', '_')}_{comune.replace('-', '').replace('  ', ' ').replace(' ', '_')}"
+    auction_id = auction_id + "_" + str(lotto)
     url = f"{url}"
     details = {
         'auction_id': auction_id,

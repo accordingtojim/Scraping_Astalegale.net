@@ -10,9 +10,11 @@ enhanced_auctions = []
 save_directory = "downloads"
 name_dump = 'debug.json'
 
-links = extract_auction_links_from_page("residenziali","va","lombardia",2)
+links_va = extract_auction_links_from_page("residenziali","va","lombardia",2)
+#links_so = extract_auction_links_from_page("residenziali","so","lombardia",1)
+#test = links_va + links_so
 
-for link in links: auctions.append(extract_auction_details(link,'downloads'))
+for link in links_va: auctions.append(extract_auction_details(link,'downloads'))
 
 #Debug
 with open(f"{name_dump}", 'w', encoding='utf-8') as file:
