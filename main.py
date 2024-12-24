@@ -22,11 +22,12 @@ with open(f"{name_dump}", 'w', encoding='utf-8') as file:
 for auction in auctions:
     directory = auction.get("Directory")
     auction_id = auction.get("auction_id")
+    lotto = auction.get("Lotto")
     enhanced_data = {"auction_id": auction_id}  # Inizializza con auction_id
     if directory:
         perizia_path = os.path.join(directory, "perizia_1.pdf")
         if os.path.exists(perizia_path):
-            extracted_data = custom_data_extraction(perizia_path)
+            extracted_data = custom_data_extraction(perizia_path,lotto)
             enhanced_data.update(extracted_data)
     enhanced_auctions.append(enhanced_data)
 

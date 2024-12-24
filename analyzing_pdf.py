@@ -20,10 +20,10 @@ def preprocess_image(image):
     processed_image = cv2.medianBlur(binary, 3)
     return Image.fromarray(processed_image)
 
-#Ha come input percorso di un pdf e ne restituisce il testo
-def extract_text_from_pdf(pdf_path):
+def extract_text_from_pdf(pdf_path, numero_lotto):
     """
     Estrae il testo da un PDF, combinando OCR per immagini e testo nativo.
+    Se numero_lotto != 1, estrae il testo successivo alla prima occorrenza della stringa "LOTTO {numero_lotto}".
     """
     text = ""
     try:
@@ -69,8 +69,22 @@ def extract_text_from_pdf(pdf_path):
                     and "astalegale.net" not in line.strip().lower()
                 ]
                 text += "\n".join(filtered_lines) + "\n"
-        
+
         pdf_document.close()
+
+        # Se numero_lotto != 1, estrai solo il testo successivo alla stringa "LOTTO {numero_lotto}"
+        if numero_lotto != 1:
+            lotto_string = f"LOTTO {numero_lotto}".lower()
+            text_lines = text.splitlines()
+
+            # Trova la prima occorrenza della stringa "LOTTO {numero_lotto}"
+            try:
+                start_index = next(i for i, line in enumerate(text_lines) if lotto_string in line.lower())
+                text = "\n".join(text_lines[start_index + 1:])
+            except StopIteration:
+                # Se la stringa non viene trovata, restituisci un testo vuoto o un messaggio di errore
+                text = ""  # Oppure "Stringa 'LOTTO {numero_lotto}' non trovata."
+
     except Exception as e:
         print(f"Errore durante l'elaborazione del PDF {pdf_path}: {e}")
     
@@ -192,8 +206,8 @@ def extract_number_or_date_after_key(text, key, search_type="both"):
 
 
 #Custom Function per estrarre dati di valore dalla perizia
-def custom_data_extraction(pdf_path):
-    text = extract_text_from_pdf(pdf_path)
+def custom_data_extraction(pdf_path,numero_lotto):
+    text = extract_text_from_pdf(pdf_path,numero_lotto)
     details = {}
     details['Valore di vendita giudiziaria'] = extract_number_or_date_after_key(text,'Valore di vendita giudiziaria','number')
     details['Conformità edilizia'] = extract_text_between_titles(text,'8.1. CONFORMITÀ EDILIZIA:','8.2')
@@ -211,6 +225,7 @@ def custom_data_extraction(pdf_path):
     details['Data valutazione'] = extract_number_or_date_after_key(text,'Data della valutazione:','date')
     return details
 
+#Funzione per unire i due file di debug in uno unico per procedere all'importazione su database
 def consolidate_json(name_file_aste, name_file_pdf, output_file):
     # Carica i dati JSON
     with open(name_file_aste, 'r', encoding='utf-8') as file_aste:
