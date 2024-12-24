@@ -10,7 +10,8 @@ enhanced_auctions = []
 save_directory = "downloads"
 name_dump = 'debug.json'
 
-links = extract_auction_links_from_page("residenziali","va","lombardia",2)
+#Se passi 'all' ti scarica tutti i links di tutte le pagine che trova
+links = extract_auction_links_from_page("residenziali","so","lombardia",'all')
 
 for link in links: auctions.append(extract_auction_details(link,'downloads'))
 

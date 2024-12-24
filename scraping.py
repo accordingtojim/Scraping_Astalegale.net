@@ -54,20 +54,26 @@ def fetch_html(url):
 # Funzione per estrarre i link delle aste da tutte le pagine
 def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
     links = set()  # Usiamo un set per evitare duplicati
-    
-    for numero_pagina in range(1, max_pagina + 1):  # Aggiunto +1 per includere l'ultima pagina
+
+    numero_pagina = 1
+    while True:
         website_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page={numero_pagina}&province={provincia}&regioni={regione}"
         print(f"Scaricando: {website_url}")
-        
+
         html_content = fetch_html(website_url)
-        
+
         if html_content is None:
             print(f"⚠️ Contenuto HTML vuoto per pagina {numero_pagina}. Passo alla successiva.")
-            continue  # Salta questa iterazione se non è possibile ottenere il contenuto
-        
+            if max_pagina != 'all':
+                break  # Esce dal loop se non stiamo scaricando tutte le pagine
+            else:
+                numero_pagina += 1
+                continue
+
         soup = BeautifulSoup(html_content, 'html.parser')
-        
+
         # Cerca i div con classe card-header
+        page_links_found = False
         for card_header in soup.find_all('div', class_='card-header'):
             # Trova il primo link all'interno di card-header
             a_tag = card_header.find('a', href=True)
@@ -78,9 +84,19 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
                 else:
                     full_url = relative_url
                 links.add(full_url)  # Usiamo il set per evitare duplicati
-                
+                page_links_found = True
+
+        if not page_links_found and max_pagina == 'all':
+            print(f"Nessun link trovato alla pagina {numero_pagina}. Presumo che non ci siano altre pagine.")
+            break
+
         print(f"Pagina {numero_pagina} completata. Link trovati finora: {len(links)}")
-    
+
+        if max_pagina != 'all' and numero_pagina >= max_pagina:
+            break
+
+        numero_pagina += 1
+
     return list(links)  # Convertiamo il set in una lista prima di restituirlo
 
 
