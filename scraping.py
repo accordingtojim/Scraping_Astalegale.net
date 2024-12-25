@@ -6,6 +6,8 @@ import json
 import mimetypes
 import re
 
+# download 1 execute 0 no
+do_download = 1
 
 def load_province_map(json_file_path):
     try:
@@ -21,18 +23,24 @@ def load_province_map(json_file_path):
     
 # Funzione di supporto per pulire eventuale testo
 def clean_number(value):
-    # if value:
-    #     # Rimuove solo gli spazi
-    #     cleaned = value.replace(' ', '')
-    #     return cleaned
-    return value
+    if value:
+        # Sostituisce la virgola con un punto per conversione in float
+        value = value.replace(',', '.')
+        return value
+    return 1
 
 # Funzione di supporto per pulire il campo "Offerta Minima" (rimuove il "(1)")
 def clean_offerta_minima(value):
     if value:
-        cleaned = re.sub(r'\(1\)', '', value).strip()
+        # Rimuove annotazioni come "(1)", "(2)", ecc.
+        cleaned = re.sub(r'\(\d+\)', '', value).strip()  # Modificato per rimuovere numeri tra parentesi
+        # Rimuove simboli monetari come '€'
+        cleaned = re.sub(r'[^\d,\.]', '', cleaned).strip()  # Mantiene solo numeri, virgola e punto
+        # Rimuove il punto come separatore delle migliaia
+        cleaned = cleaned.replace('.', '')  # Rimuove il punto
+        # Passa il risultato a clean_number per convertirlo in un numero
         return clean_number(cleaned)
-    return None
+    return 1
 
 # Carica la mappa delle province dal file JSON
 province_map = load_province_map('mappe_province.json')
@@ -57,7 +65,7 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
 
     numero_pagina = 1
     while True:
-        website_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page={numero_pagina}&province={provincia}&regioni={regione}"
+        website_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page={numero_pagina}&province={provincia}&regioni={regione}&sort=DataPubblicazioneDesc"
         print(f"Scaricando: {website_url}")
 
         html_content = fetch_html(website_url)
@@ -70,7 +78,11 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
                 numero_pagina += 1
                 continue
 
-        soup = BeautifulSoup(html_content, 'html.parser')
+        if html_content is not None:
+            soup = BeautifulSoup(html_content, 'html.parser')
+        else:
+            print(f"Error: No content fetched for {link}")
+            soup = None  # Handle the error gracefully here
 
         # Cerca i div con classe card-header
         page_links_found = False
@@ -101,14 +113,14 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
 
 
 def extract_auction_details(url, save_directory):
-    
+
     html_content = fetch_html(url)
     soup = BeautifulSoup(html_content, 'html.parser')
-    
+
     # Funzione di supporto per cercare elementi con testo flessibile
     def find_flexible_text(tag, text):
         return soup.find(tag, text=lambda t: t and text in t)
-    
+
     # Estrazione della via
     via_container = soup.find('div', class_='col dettaglio_title d-flex')
     via_element = via_container.find('h2') if via_container else None
@@ -159,7 +171,7 @@ def extract_auction_details(url, save_directory):
     # Valore di stima
     valore_stima_element = soup.find('span', text='Valore di stima')
     valore_stima_value = valore_stima_element.find_next_sibling('span') if valore_stima_element else None
-    valore_stima = clean_number(valore_stima_value.text.strip() if valore_stima_value else 'Valore di stima non trovato')
+    valore_stima = clean_offerta_minima(valore_stima_value.text.strip() if valore_stima_value else 'Valore di stima non trovato')
     
     # Tipologia
     tipologia_element = soup.find('span', text='Tipologia')
@@ -239,13 +251,26 @@ def extract_auction_details(url, save_directory):
 
     # Calcolo del numero di aste andate vuote
     numero_aste_vuote = len(storico_aste)
-    
+
+    #Indicatore stima/offerta minima
+    kpi_sconto = float(offerta_min) / float(valore_stima)
+    kpi_sconto_threshold = 0.65
+
+    #indicatore interessante
+
+    if kpi_sconto < kpi_sconto_threshold and stato_occupazione == "Libero" and numero_aste_vuote < 5:
+        interessante = "Si"
+    else:
+        interessante = ""
+
     auction_id = f"asta_{indirizzo.replace('-', '').replace('  ', ' ').replace(' ', '_')}_{comune.replace('-', '').replace('  ', ' ').replace(' ', '_')}"
     auction_id = auction_id + "_" + str(lotto)
     url = f"{url}"
     details = {
+        'interessante':interessante,
         'auction_id': auction_id,
-        'via' : via,
+        'kpi_sconto': kpi_sconto,
+        'via': via,
         'comune': comune,
         'provincia': provincia, 
         'Indirizzo': indirizzo,
@@ -272,50 +297,50 @@ def extract_auction_details(url, save_directory):
         os.makedirs(details['Directory'])
 
     # Cerca i link ai file nel nuovo formato HTML
-    document_container = soup.find('ul', class_='documenti d-flex flex-wrap')
-    if not document_container:
-        print("Nessun documento trovato nella pagina.")
-        return
+    if do_download == 1:
+        document_container = soup.find('ul', class_='documenti d-flex flex-wrap')
+        if not document_container:
+            print("Nessun documento trovato nella pagina.")
+            return
     
-    links = document_container.find_all('a', href=True)
+        links = document_container.find_all('a', href=True)
 
      # Dizionario per tenere traccia dei conteggi dei file
-    file_counters = {'planimetria': 0, 'ordinanza': 0, 'perizia': 0, 'avviso': 0}
-    
-    with ThreadPoolExecutor(max_workers=6) as executor:  # Puoi modificare max_workers per regolare il grado di parallelismo
-        futures = []
-        for link in links:
-            href = link['href']
-            link_text = link.text.lower()
-            # Determina il tipo di file in base al testo del link
-            file_type = None
-            for keyword in file_counters.keys():
-                if keyword in link_text:
-                    file_type = keyword
-                    break
-            
-            if file_type:
-                # Aggiorna il contatore e crea il nome file con numero progressivo
-                file_counters[file_type] += 1
-                file_name = f"{file_type}_{file_counters[file_type]}.pdf"
-                file_url = href if href.startswith('http') else "https://documents.astalegale.net" + href
-                file_path = os.path.join(details['Directory'], file_name)
+        file_counters = {'planimetria': 0, 'ordinanza': 0, 'perizia': 0, 'avviso': 0}
+        with ThreadPoolExecutor(max_workers=6) as executor:  # Puoi modificare max_workers per regolare il grado di parallelismo
+            futures = []
+            for link in links:
+                href = link['href']
+                link_text = link.text.lower()
+                # Determina il tipo di file in base al testo del link
+                file_type = None
+                for keyword in file_counters.keys():
+                    if keyword in link_text:
+                        file_type = keyword
+                        break
 
-                # Funzione diretta per il download
-                futures.append(
-                    executor.submit(
-                        lambda url, path: 
-                        download_file(url, path), 
-                        file_url, 
-                        file_path
+                if file_type:
+                    # Aggiorna il contatore e crea il nome file con numero progressivo
+                    file_counters[file_type] += 1
+                    file_name = f"{file_type}_{file_counters[file_type]}.pdf"
+                    file_url = href if href.startswith('http') else "https://documents.astalegale.net" + href
+                    file_path = os.path.join(details['Directory'], file_name)
+
+                    # Funzione diretta per il download
+                    futures.append(
+                        executor.submit(
+                            lambda url, path:
+                            download_file(url, path),
+                            file_url,
+                            file_path
+                        )
                     )
-                )
 
-        for future in as_completed(futures):
-            try:
-                future.result()  # Controlla eventuali eccezioni nel thread
-            except Exception as e:
-                print(f"Errore durante il download di un file: {e}")
+            for future in as_completed(futures):
+                try:
+                    future.result()  # Controlla eventuali eccezioni nel thread
+                except Exception as e:
+                    print(f"Errore durante il download di un file: {e}")
     return details
 
 def download_files_from_page(url, auction_directory):

@@ -237,17 +237,16 @@ def consolidate_json(name_file_aste, name_file_pdf, output_file):
     # Consolidare i dati
     consolidated_data = []
 
-    for asta in data_aste:
-        # Trova il record corrispondente in data_pdf
-        pdf_data = next((pdf for pdf in data_pdf if pdf['auction_id'] == asta['auction_id']), {})
-
-        # Unisci i dati di asta e pdf
-        consolidated_entry = {
-            **asta,  # Tutti i campi di debug.json
-            **pdf_data  # Tutti i campi di debug_pdf.json
-        }
-
-        consolidated_data.append(consolidated_entry)
+    if data_pdf:
+        for asta in data_aste:
+            pdf_data = next((pdf for pdf in data_pdf if pdf['auction_id'] == asta['auction_id']), {})
+            consolidated_entry = {
+                **asta,  # Tutti i campi di debug.json
+                **pdf_data  # Tutti i campi di debug_pdf.json
+            }
+            consolidated_data.append(consolidated_entry)
+    else:
+        print("data_pdf è vuoto o None, impossibile procedere.")
 
     # Salva il file consolidato
     with open(output_file, 'w', encoding='utf-8') as outfile:

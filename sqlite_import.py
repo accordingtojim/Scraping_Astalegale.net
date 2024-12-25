@@ -12,7 +12,9 @@ def import_json_to_sqlite(json_file, sqlite_db):
     # Creazione della tabella
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS aste (
+        interessante TEXT,
         auction_id TEXT PRIMARY KEY,
+        kpi_sconto FLOAT,
         via TEXT,
         comune TEXT,
         provincia TEXT,
@@ -52,7 +54,7 @@ def import_json_to_sqlite(json_file, sqlite_db):
     for record in data:
         storico_aste = json.dumps(record.get("Storico Aste", []))  # Converti lo storico in JSON string
         values = (
-            record.get("auction_id"), record.get("via", None), record.get("comune", None), record.get("provincia", None),
+            record.get("interessante",None), record.get("auction_id"), record.get("kpi_sconto",None), record.get("via", None), record.get("comune", None), record.get("provincia", None),
             record.get("Indirizzo", None), record.get("Tipologia", None), record.get("Valore di Stima", None),
             record.get("Prezzo", None), record.get("Offerta Minima", None), record.get("Categoria", None),
             record.get("Stato di Occupazione", None), record.get("Data Asta", None), record.get("Lotto", None),
@@ -69,7 +71,7 @@ def import_json_to_sqlite(json_file, sqlite_db):
 
         cursor.execute('''
         INSERT OR REPLACE INTO aste (
-            auction_id, via, comune, provincia, Indirizzo, Tipologia, "Valore di Stima",
+            interessante, auction_id, kpi_sconto, via, comune, provincia, Indirizzo, Tipologia, "Valore di Stima",
             Prezzo, "Offerta Minima", Categoria, "Stato di Occupazione", "Data Asta", Lotto,
             "Numero Aste Vuote", "Termine presentazione offerte", "Modalità Gara", Storico_Aste,
             URL, Directory, "Valore di vendita giudiziaria", "Conformità edilizia", "Conformità catastale",
@@ -77,7 +79,7 @@ def import_json_to_sqlite(json_file, sqlite_db):
             "Superficie unità accessorie", "Valore stato di fatto", "Valore netto decurtazioni",
             "Valore stato di diritto", "Spese annue", "Spese annue deliberate", "Spese annue scadute",
             "Data valutazione"
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', values)
 
     # Salva e chiudi
