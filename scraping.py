@@ -1,4 +1,5 @@
 import requests
+import math
 from bs4 import BeautifulSoup
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -297,7 +298,8 @@ def extract_auction_details(url, save_directory):
     numero_aste_vuote = len(storico_aste)
 
     #Indicatore stima/offerta minima
-    kpi_sconto = float(offerta_min) / float(valore_stima)
+    kpi_sconto_long = float(offerta_min) / float(valore_stima)
+    kpi_sconto = math.trunc(kpi_sconto_long * 100) / 100
     kpi_sconto_threshold = 0.65
 
     #indicatore interessante
