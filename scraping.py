@@ -8,17 +8,14 @@ import re
 import tkinter as tk
 from tkinter import messagebox
 
-# da riga 12 a 24 può essere anche sostituito semplicemente da do_download = 1
+# da riga 12 a 21 può essere anche sostituito semplicemente da do_download = 1
 def ask_user():
     root = tk.Tk()
     root.withdraw()  # Nasconde la finestra principale
-
     # Mostra la finestra di dialogo con le opzioni 'Yes' e 'No'
     response = messagebox.askyesno("Conferma Download", "Vuoi eseguire i download?")
-
     # Se l'utente seleziona 'Yes', assegna 1 a do_download, altrimenti assegna 0
     do_download = 1 if response else 0
-
     return do_download
 
 do_download = ask_user()
