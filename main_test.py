@@ -11,7 +11,7 @@ save_directory = "downloads"
 name_dump = 'debug.json'
 
 
-links_va = extract_auction_links_from_page("residenziali","va","lombardia",2)
+links_va = extract_auction_links_from_page("residenziali","va","lombardia",14)
 #links_so = extract_auction_links_from_page("residenziali","so","lombardia",1)
 #test = links_va + links_so
 
@@ -24,17 +24,20 @@ with open(f"{name_dump}", 'w', encoding='utf-8') as file:
 
 #Per ogni asta estraggo dati dalla perizia e esporto in un json per debug
 for auction in auctions:
-    print(auction.get('URL', 'URL non trovato'))
     if auction is not None:
+        print(auction.get('URL', 'URL non trovato'))
+
         directory = auction.get("Directory")
         auction_id = auction.get("auction_id")
         lotto = auction.get("Lotto")
         enhanced_data = {"auction_id": auction_id}  # Inizializza con auction_id
+
         if directory:
             perizia_path = os.path.join(directory, "perizia_1.pdf")
             if os.path.exists(perizia_path):
-                extracted_data = custom_data_extraction(perizia_path,lotto)
+                extracted_data = custom_data_extraction(perizia_path, lotto)
                 enhanced_data.update(extracted_data)
+
         enhanced_auctions.append(enhanced_data)
     else:
         print(f"Errore: l'asta per il link {link} non è stata estratta correttamente.")

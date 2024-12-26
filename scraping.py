@@ -7,7 +7,7 @@ import mimetypes
 import re
 
 # download 1 execute 0 no
-do_download = 1
+do_download = 0
 
 def load_province_map(json_file_path):
     try:
