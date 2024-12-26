@@ -78,9 +78,8 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
     while True:
         website_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page={numero_pagina}&province={provincia}&regioni={regione}&sort=DataPubblicazioneDesc"
         print(f"Scaricando: {website_url}")
-
+        
         html_content = fetch_html(website_url)
-
         if html_content is None:
             print(f"⚠️ Contenuto HTML vuoto per pagina {numero_pagina}. Passo alla successiva.")
             if max_pagina != 'all':
