@@ -88,12 +88,8 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
             else:
                 numero_pagina += 1
                 continue
-
-        if html_content is not None:
-            soup = BeautifulSoup(html_content, 'html.parser')
         else:
-            print(f"Error: No content fetched for {link}")
-            soup = None  # Handle the error gracefully here
+            soup = BeautifulSoup(html_content, 'html.parser')
 
         # Cerca i div con classe card-header
         page_links_found = False
