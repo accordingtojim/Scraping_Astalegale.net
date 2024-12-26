@@ -5,9 +5,23 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import mimetypes
 import re
+import tkinter as tk
+from tkinter import messagebox
 
-# download 1 execute 0 no
-do_download = 1
+def ask_user():
+    root = tk.Tk()
+    root.withdraw()  # Nasconde la finestra principale
+
+    # Mostra la finestra di dialogo con le opzioni 'Yes' e 'No'
+    response = messagebox.askyesno("Conferma Download", "Vuoi eseguire i download?")
+
+    # Se l'utente seleziona 'Yes', assegna 1 a do_download, altrimenti assegna 0
+    do_download = 1 if response else 0
+
+    return do_download
+
+# Esegui la funzione e ottieni il valore
+do_download = ask_user()
 
 def load_province_map(json_file_path):
     try:

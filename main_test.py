@@ -11,7 +11,7 @@ save_directory = "downloads"
 name_dump = 'debug.json'
 
 
-links_va = extract_auction_links_from_page("residenziali","va","lombardia",14)
+links_va = extract_auction_links_from_page("residenziali","va","lombardia",2)
 #links_so = extract_auction_links_from_page("residenziali","so","lombardia",1)
 #test = links_va + links_so
 
