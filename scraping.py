@@ -8,6 +8,7 @@ import re
 import tkinter as tk
 from tkinter import messagebox
 
+# da riga 12 a 24 può essere anche sostituito semplicemente da do_download = 1
 def ask_user():
     root = tk.Tk()
     root.withdraw()  # Nasconde la finestra principale
@@ -20,7 +21,6 @@ def ask_user():
 
     return do_download
 
-# Esegui la funzione e ottieni il valore
 do_download = ask_user()
 
 def load_province_map(json_file_path):
