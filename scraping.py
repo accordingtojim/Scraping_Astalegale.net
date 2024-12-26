@@ -93,7 +93,7 @@ def get_total_pages(html_content):
         print("⚠️ Nessun numero di pagina trovato!")
         return 0
 
-#Fino a numero di pagina = 1 serve solo a mandare messaggio di testo con max n pagine per categoria
+#prima di numero di pagina = 1 ho aggiunto codice per stampare max n pagine per categoria
 # Funzione per estrarre i link delle aste Generale
 # Funzione per estrarre i link delle aste da tutte le pagine
 def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
@@ -108,18 +108,9 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
         print("⚠️ Impossibile scaricare la prima pagina!")
         return []
 
-    # Calcola il numero massimo di pagine
+    # Calcola il numero massimo di pagine e lo stampa
     total_pages = get_total_pages(first_page_html)
-    print(f"Questa categoria ha {total_pages} pagine.")  # Messaggio informativo
-
-    # Messaggio informativo tramite una text box
-    import tkinter as tk
-    from tkinter import messagebox
-
-    root = tk.Tk()
-    root.withdraw()  # Nasconde la finestra principale
-    messagebox.showinfo("Informazione", f"Questa categoria ha {total_pages} pagine.")
-    root.destroy()
+    print(f"Questa categoria ha {total_pages} pagine.")
 
     numero_pagina = 1
     while True:
