@@ -1,4 +1,5 @@
 import requests
+import math
 from bs4 import BeautifulSoup
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -87,10 +88,48 @@ def fetch_html_with_cookies(url, headers=None, proxies=None):
         print(f"Errore durante il fetch: {e}")
         return None
 
+#Funzione per capire max numero di pagine per categoria
+def get_total_pages(html_content):
+    """
+    Estrae il numero totale di pagine dal contenuto HTML di una pagina web.
+    """
+    soup = BeautifulSoup(html_content, 'html.parser')
+    pagination = soup.find('ul', class_='pagination')
+    if not pagination:
+        print("⚠️ Nessun elemento di paginazione trovato!")
+        return 0
+
+    # Cerca tutti i pulsanti all'interno della paginazione
+    page_numbers = []
+    for page_item in pagination.find_all('li', class_='page-item'):
+        button = page_item.find('button', class_='page-link')
+        if button and button.text.isdigit():  # Verifica se il testo è un numero
+            page_numbers.append(int(button.text))
+
+    if page_numbers:
+        return max(page_numbers)  # Restituisce il numero massimo trovato
+    else:
+        print("⚠️ Nessun numero di pagina trovato!")
+        return 0
+
+#prima di numero di pagina = 1 ho aggiunto codice per stampare max n pagine per categoria
 # Funzione per estrarre i link delle aste Generale
 # Funzione per estrarre i link delle aste da tutte le pagine
 def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
     links = set()  # Usiamo un set per evitare duplicati
+
+    # Ottieni il contenuto HTML della prima pagina per calcolare il totale delle pagine
+    first_page_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page=1&province={provincia}&regioni={regione}&sort=DataPubblicazioneDesc"
+    print(f"Scaricando: {first_page_url}")
+
+    first_page_html = fetch_html(first_page_url)
+    if not first_page_html:
+        print("⚠️ Impossibile scaricare la prima pagina!")
+        return []
+
+    # Calcola il numero massimo di pagine e lo stampa
+    total_pages = get_total_pages(first_page_html)
+    print(f"Questa categoria ha {total_pages} pagine.")
 
     numero_pagina = 1
     while True:
@@ -281,12 +320,13 @@ def extract_auction_details(url, save_directory,execute_download):
     numero_aste_vuote = len(storico_aste)
 
     #Indicatore stima/offerta minima
-    kpi_sconto = float(offerta_min) / float(valore_stima)
+    kpi_sconto_long = float(offerta_min) / float(valore_stima)
+    kpi_sconto = math.trunc(kpi_sconto_long * 100) / 100
     kpi_sconto_threshold = 0.65
 
     #indicatore interessante
     if kpi_sconto < kpi_sconto_threshold and stato_occupazione == "Libero" and numero_aste_vuote < 5:
-        interessante = "Si"
+        interessante = "1"
     else:
         interessante = ""
 
