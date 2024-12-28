@@ -7,6 +7,8 @@ import mimetypes
 import re
 import tkinter as tk
 from tkinter import messagebox
+from requests.exceptions import RequestException
+import time
 
 # da riga 12 a 21 può essere anche sostituito semplicemente da do_download = 1
 def ask_user():
@@ -18,7 +20,7 @@ def ask_user():
     do_download = 1 if response else 0
     return do_download
 
-do_download = ask_user()
+
 
 def load_province_map(json_file_path):
     try:
@@ -50,23 +52,39 @@ def clean_offerta_minima(value):
         # Rimuove il punto come separatore delle migliaia
         cleaned = cleaned.replace('.', '')  # Rimuove il punto
         # Passa il risultato a clean_number per convertirlo in un numero
-        return clean_number(cleaned)
-    return 1
+        return str(clean_number(cleaned))
+    return "1"
 
 # Carica la mappa delle province dal file JSON
 province_map = load_province_map('mappe_province.json')
 
-# Funzione per scaricare il contenuto HTML della pagina
-def fetch_html(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
+def fetch_html_with_cookies(url, headers=None, proxies=None):
+    """
+    Scarica il contenuto HTML di una pagina specificata dall'URL.
+
+    :param url: URL della pagina da scaricare.
+    :param headers: Dizionario con gli headers da usare nella richiesta (opzionale).
+    :param proxies: Dizionario con i proxy da usare nella richiesta (opzionale).
+    :return: Contenuto HTML della pagina o None in caso di errore.
+    """
+    # Headers di default (se non specificati)
+    default_headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
     }
+    # Usa gli headers forniti o quelli di default
+    headers = headers or default_headers
+
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Solleva eccezioni per 4xx e 5xx
+        session = requests.Session()  # Usa una sessione persistente
+        response = session.get(url, headers=headers, proxies=proxies)
+        response.raise_for_status()  # Solleva eccezioni per errori HTTP
         return response.text
-    except requests.exceptions.RequestException as e:
-        print(f"Errore durante il download della pagina: {e}")
+    except RequestException as e:
+        print(f"Errore durante il fetch: {e}")
         return None
 
 # Funzione per estrarre i link delle aste Generale
@@ -79,7 +97,7 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
         website_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page={numero_pagina}&province={provincia}&regioni={regione}&sort=DataPubblicazioneDesc"
         print(f"Scaricando: {website_url}")
         
-        html_content = fetch_html(website_url)
+        html_content = fetch_html_with_cookies(website_url)
         if html_content is None:
             print(f"⚠️ Contenuto HTML vuoto per pagina {numero_pagina}. Passo alla successiva.")
             if max_pagina != 'all':
@@ -113,14 +131,17 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
         if max_pagina != 'all' and numero_pagina >= max_pagina:
             break
 
+        time.sleep(4) 
         numero_pagina += 1
 
     return list(links)  # Convertiamo il set in una lista prima di restituirlo
 
 
-def extract_auction_details(url, save_directory):
+def extract_auction_details(url, save_directory,execute_download):
 
-    html_content = fetch_html(url)
+    html_content = fetch_html_with_cookies(url)
+    if html_content == None:
+        return None
     soup = BeautifulSoup(html_content, 'html.parser')
 
     # Funzione di supporto per cercare elementi con testo flessibile
@@ -151,7 +172,7 @@ def extract_auction_details(url, save_directory):
     # Funzione di supporto per correggere il valore del lotto
     def clean_lotto(value):
         value = value.strip().lower()
-        return 1 if value in ["unico", "LOTTO UNICO", "lotto unico"] else value
+        return "1" if value in ["unico", "LOTTO UNICO", "lotto unico"] else value
 
     # Estrarre e pulire il lotto
     lotto_element = soup.find('span', text='Lotto')
@@ -230,6 +251,7 @@ def extract_auction_details(url, save_directory):
     stato_occupazione_map = {
         "LIBER": "Libero",
         "OCCUPATO": "Occupato",
+        "OCCUPAT": "Occupato",
         "OCCUPATO DA TERZI CON TITOLO": "Occupato da terzi con titolo",
         "OCCUPATO DA DEBITORE/FAMIGLIA": "Occupato da debitore/famiglia",
         # Aggiungi altre mappature se necessario
@@ -263,7 +285,6 @@ def extract_auction_details(url, save_directory):
     kpi_sconto_threshold = 0.65
 
     #indicatore interessante
-
     if kpi_sconto < kpi_sconto_threshold and stato_occupazione == "Libero" and numero_aste_vuote < 5:
         interessante = "Si"
     else:
@@ -303,7 +324,7 @@ def extract_auction_details(url, save_directory):
         os.makedirs(details['Directory'])
 
     # Cerca i link ai file nel nuovo formato HTML
-    if do_download == 1:
+    if execute_download == 1:
         document_container = soup.find('ul', class_='documenti d-flex flex-wrap')
         if not document_container:
             print("Nessun documento trovato nella pagina.")
