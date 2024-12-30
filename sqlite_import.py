@@ -14,7 +14,7 @@ def import_json_to_sqlite(json_file, sqlite_db):
     # Creazione della tabella principale
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS aste (
-        interessante TEXT,
+        
         auction_id TEXT PRIMARY KEY,
         kpi_sconto FLOAT,
         via TEXT,
@@ -22,13 +22,13 @@ def import_json_to_sqlite(json_file, sqlite_db):
         provincia TEXT,
         Indirizzo TEXT,
         Tipologia TEXT,
-        "Valore di Stima" TEXT,
-        Prezzo TEXT,
-        "Offerta Minima" TEXT,
+        "Valore di Stima" FLOAT,
+        Prezzo FLOAT,
+        "Offerta Minima" FLOAT,
         Categoria TEXT,
         "Stato di Occupazione" TEXT,
         "Data Asta" TEXT,
-        Lotto TEXT,
+        Lotto INT,
         "Numero Aste Vuote" INTEGER,
         "Termine presentazione offerte" TEXT,
         "Modalità Gara" TEXT,
@@ -48,6 +48,7 @@ def import_json_to_sqlite(json_file, sqlite_db):
         "Spese annue deliberate" TEXT,
         "Spese annue scadute" TEXT,
         "Data valutazione" TEXT,
+        interessante TEXT,
         data_inserimento TEXT
     )
     ''')

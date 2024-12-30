@@ -10,7 +10,7 @@ save_directory = "downloads"
 name_dump = 'debug.json'
 
 
-if 1:
+if 0:
     execute_download = ask_user()
     #Se passi 'all' ti scarica tutti i links di tutte le pagine che trova
     links_so = extract_auction_links_from_page("residenziali","so","lombardia",'all')

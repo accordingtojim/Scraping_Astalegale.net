@@ -34,27 +34,26 @@ def load_province_map(json_file_path):
     except json.JSONDecodeError:
         print(f"Errore: il file {json_file_path} non contiene un JSON valido.")
         return {}
-    
-# Funzione di supporto per pulire eventuale testo
-def clean_number(value):
-    if value:
-        # Sostituisce la virgola con un punto per conversione in float
-        value = value.replace(',', '.')
-        return value
-    return 1
 
 # Funzione di supporto per pulire il campo "Offerta Minima" (rimuove il "(1)")
-def clean_offerta_minima(value):
+def clean_prezzi(value):
     if value:
-        # Rimuove annotazioni come "(1)", "(2)", ecc.
+        # Rimuove anazioni come "(1)", "(2)", ecc.
         cleaned = re.sub(r'\(\d+\)', '', value).strip()  # Modificato per rimuovere numeri tra parentesi
         # Rimuove simboli monetari come '€'
         cleaned = re.sub(r'[^\d,\.]', '', cleaned).strip()  # Mantiene solo numeri, virgola e punto
         # Rimuove il punto come separatore delle migliaia
         cleaned = cleaned.replace('.', '')  # Rimuove il punto
-        # Passa il risultato a clean_number per convertirlo in un numero
-        return str(clean_number(cleaned))
-    return "1"
+        #Sostituisci virgola con punto per delimitare decimali
+        cleaned = cleaned.replace(',', '.')
+        if cleaned != '':
+        #transformo in float e arrotonda
+            cleaned = round(float(cleaned))
+        else:
+            cleaned = 1
+        return cleaned
+    return 1    
+    
 
 # Carica la mappa delle province dal file JSON
 province_map = load_province_map('mappe_province.json')
@@ -237,7 +236,7 @@ def extract_auction_details(url, save_directory,execute_download):
     # Valore di stima
     valore_stima_element = soup.find('span', text='Valore di stima')
     valore_stima_value = valore_stima_element.find_next_sibling('span') if valore_stima_element else None
-    valore_stima = clean_offerta_minima(valore_stima_value.text.strip() if valore_stima_value else 'Valore di stima non trovato')
+    valore_stima = clean_prezzi(valore_stima_value.text.strip() if valore_stima_value else 'Valore di stima non trovato')
     
     # Tipologia
     tipologia_element = soup.find('span', text='Tipologia')
@@ -250,7 +249,7 @@ def extract_auction_details(url, save_directory,execute_download):
     # Prezzo
     prezzo_element = soup.find('span', text='Prezzo')
     prezzo_value = prezzo_element.find_next_sibling('span') if prezzo_element else None
-    prezzo = clean_number(prezzo_value.text.strip() if prezzo_value else 'Prezzo non trovato')
+    prezzo = clean_prezzi(prezzo_value.text.strip() if prezzo_value else 'Prezzo non trovato')
     
     # Termine presentazione offerte
     termine_offerte_element = soup.find('span', text='Termine presentazione offerte')
@@ -279,7 +278,7 @@ def extract_auction_details(url, save_directory,execute_download):
     # Offerta minima
     offerta_min_element = soup.find('span', text='Offerta minima')
     offerta_min_value = offerta_min_element.find_next_sibling('span') if offerta_min_element else None
-    offerta_min = clean_offerta_minima(offerta_min_value.text.strip() if offerta_min_value else 'Offerta minima non trovata')
+    offerta_min = clean_prezzi(offerta_min_value.text.strip() if offerta_min_value else 'Offerta minima non trovata')
     
     # Modalità gara
     modalita_gara_element = soup.find('span', text='Modalità gara')
@@ -311,10 +310,10 @@ def extract_auction_details(url, save_directory,execute_download):
     if storico_container:
         for item in storico_container.find_all('li'):
             data_element = item.find('p', class_='storico-data')
-            prezzo_element = item.find('span')
+            prezzo_element_storico = item.find('span')
             data = data_element.text.strip() if data_element else 'Data non trovata'
-            prezzo = prezzo_element.text.strip() if prezzo_element else 'Prezzo non trovato'
-            storico_aste.append({'data': data, 'prezzo': prezzo})
+            prezzo_storico = prezzo_element_storico.text.strip() if prezzo_element_storico else 'Prezzo non trovato'
+            storico_aste.append({'data': data, 'prezzo': prezzo_storico})
 
     # Calcolo del numero di aste andate vuote
     numero_aste_vuote = len(storico_aste)
