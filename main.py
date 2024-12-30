@@ -17,7 +17,10 @@ if 1:
     links_va = extract_auction_links_from_page("residenziali","va","lombardia",'all')
     links_vc = extract_auction_links_from_page("residenziali","vc","piemonte",'all')
     links_vb = extract_auction_links_from_page("residenziali","vb","piemonte",'all')
-    links = links_so +links_vc+links_vb+links_va
+    links_ao = extract_auction_links_from_page("residenziali","ao","valle-daosta",'all')
+    links_bz = extract_auction_links_from_page("residenziali","bz","trentino-alto-adige",'all')
+    links_tn = extract_auction_links_from_page("residenziali","tn","trentino-alto-adige",'all')
+    links = links_so +links_vc+links_vb+links_va+links_ao+links_bz+links_tn
 
 
     for link in links: auctions.append(extract_auction_details(link,'downloads',execute_download))
@@ -28,17 +31,17 @@ if 1:
 
     #Per ogni asta estraggo dati dalla perizia e esporto in un json per debug
     for auction in auctions:
-        
-        directory = auction.get("Directory")
-        auction_id = auction.get("auction_id")
-        lotto = auction.get("Lotto")
-        enhanced_data = {"auction_id": auction_id}  # Inizializza con auction_id
-        if directory:
-            perizia_path = os.path.join(directory, "perizia_1.pdf")
-            if os.path.exists(perizia_path):
-                extracted_data = custom_data_extraction(perizia_path,lotto)
-                enhanced_data.update(extracted_data)
-        enhanced_auctions.append(enhanced_data)
+        if (auction != "null") and (auction!= None):
+            directory = auction.get("Directory")
+            auction_id = auction.get("auction_id")
+            lotto = auction.get("Lotto")
+            enhanced_data = {"auction_id": auction_id}  # Inizializza con auction_id
+            if directory:
+                perizia_path = os.path.join(directory, "perizia_1.pdf")
+                if os.path.exists(perizia_path):
+                    extracted_data = custom_data_extraction(perizia_path,lotto)
+                    enhanced_data.update(extracted_data)
+            enhanced_auctions.append(enhanced_data)
 
     #debug
     with open("debug_pdf.json", 'w', encoding='utf-8') as file:

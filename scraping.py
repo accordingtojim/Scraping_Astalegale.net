@@ -78,7 +78,7 @@ def fetch_html_with_cookies(url, headers=None, proxies=None):
     }
     # Usa gli headers forniti o quelli di default
     headers = headers or default_headers
-
+    time.sleep(2) 
     try:
         session = requests.Session()  # Usa una sessione persistente
         response = session.get(url, headers=headers, proxies=proxies)
@@ -122,7 +122,7 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
     first_page_url = f"https://www.astalegale.net/Immobili?categories={categoria}&page=1&province={provincia}&regioni={regione}&sort=DataPubblicazioneDesc"
     print(f"Scaricando: {first_page_url}")
 
-    first_page_html = fetch_html(first_page_url)
+    first_page_html = fetch_html_with_cookies(first_page_url)
     if not first_page_html:
         print("⚠️ Impossibile scaricare la prima pagina!")
         return []
@@ -170,7 +170,7 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
         if max_pagina != 'all' and numero_pagina >= max_pagina:
             break
 
-        time.sleep(4) 
+        
         numero_pagina += 1
 
     return list(links)  # Convertiamo il set in una lista prima di restituirlo
