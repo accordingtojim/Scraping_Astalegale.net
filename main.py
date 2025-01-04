@@ -9,18 +9,27 @@ enhanced_auctions = []
 save_directory = "downloads"
 name_dump = 'debug.json'
 
+# array_categoria = ["residenziali","residenziali","residenziali","residenziali","residenziali","residenziali",
+#                    "residenziali"]
+# array_provincia = ["so","va","vc","vb","ao","bz"]
+# array_regione = ["lombardia","lombardia","piemonte","piemonte","valle-daosta","trentino-alto-adige"]
+# array_pagine = ['all','all','all','all','all','all','all']
 
-if 0:
+
+if 1:
     execute_download = ask_user()
     #Se passi 'all' ti scarica tutti i links di tutte le pagine che trova
+    links_bg = extract_auction_links_from_page("residenziali","bg","lombardia",'all')
+    links_mi = extract_auction_links_from_page("residenziali","mi","lombardia",'all')
     links_so = extract_auction_links_from_page("residenziali","so","lombardia",'all')
     links_va = extract_auction_links_from_page("residenziali","va","lombardia",'all')
     links_vc = extract_auction_links_from_page("residenziali","vc","piemonte",'all')
     links_vb = extract_auction_links_from_page("residenziali","vb","piemonte",'all')
+    links_no = extract_auction_links_from_page("residenziali","no","piemonte",'all')
     links_ao = extract_auction_links_from_page("residenziali","ao","valle-daosta",'all')
     links_bz = extract_auction_links_from_page("residenziali","bz","trentino-alto-adige",'all')
     links_tn = extract_auction_links_from_page("residenziali","tn","trentino-alto-adige",'all')
-    links = links_so +links_vc+links_vb+links_va+links_ao+links_bz+links_tn
+    links = links_so +links_vc+links_vb+links_va+links_ao+links_bz+links_tn+links_bg+links_mi+links_no
 
 
     for link in links: auctions.append(extract_auction_details(link,'downloads',execute_download))
@@ -47,8 +56,8 @@ if 0:
     with open("debug_pdf.json", 'w', encoding='utf-8') as file:
         json.dump(enhanced_auctions, file, indent=4, ensure_ascii=False)
 
-    #unisco i due json per avere un json unico da importare in sqlite
-    consolidate_json('debug.json','debug_pdf.json','final.json')
+#unisco i due json per avere un json unico da importare in sqlite
+consolidate_json('debug.json','debug_pdf.json','final.json')
 
 #importo dati in sqlite
 import_json_to_sqlite('final.json', 'aste.db')

@@ -225,8 +225,10 @@ def custom_data_extraction(pdf_path,numero_lotto):
     details['Data valutazione'] = extract_number_or_date_after_key(text,'Data della valutazione:','date')
     return details
 
-#Funzione per unire i due file di debug in uno unico per procedere all'importazione su database
+# Funzione per unire i due file di debug in uno unico per procedere all'importazione su database
 def consolidate_json(name_file_aste, name_file_pdf, output_file):
+    import json
+
     # Carica i dati JSON
     with open(name_file_aste, 'r', encoding='utf-8') as file_aste:
         data_aste = json.load(file_aste)
@@ -239,7 +241,15 @@ def consolidate_json(name_file_aste, name_file_pdf, output_file):
 
     if data_pdf:
         for asta in data_aste:
-            pdf_data = next((pdf for pdf in data_pdf if pdf['auction_id'] == asta['auction_id']), {})
+            # Salta se l'asta è None
+            if asta is None:
+                print("Trovata un'asta con valore None, ignorata.")
+                continue
+            
+            # Trova i dati corrispondenti nel file PDF
+            pdf_data = next((pdf for pdf in data_pdf if pdf['auction_id'] == asta.get('auction_id')), {})
+            
+            # Combina i dati delle due sorgenti
             consolidated_entry = {
                 **asta,  # Tutti i campi di debug.json
                 **pdf_data  # Tutti i campi di debug_pdf.json
@@ -254,7 +264,5 @@ def consolidate_json(name_file_aste, name_file_pdf, output_file):
 
     print(f"Dati consolidati salvati in {output_file}")
 
-
- 
 
 

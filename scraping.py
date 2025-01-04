@@ -329,7 +329,7 @@ def extract_auction_details(url, save_directory,execute_download):
     else:
         interessante = ""
 
-    auction_id = f"asta_{indirizzo.replace('-', '').replace('  ', ' ').replace(' ', '_')}_{comune.replace('-', '').replace('  ', ' ').replace(' ', '_')}"
+    auction_id = f"asta_{via.replace('-', '').replace('  ', ' ').replace(' ', '_')}_{comune.replace('-', '').replace('  ', ' ').replace(' ', '_')}"
     auction_id = auction_id + "_" + str(lotto)
     url = f"{url}"
     details = {

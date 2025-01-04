@@ -16,7 +16,6 @@ def import_json_to_sqlite(json_file, sqlite_db):
     CREATE TABLE IF NOT EXISTS aste (
         
         auction_id TEXT PRIMARY KEY,
-        kpi_sconto FLOAT,
         via TEXT,
         comune TEXT,
         provincia TEXT,
@@ -49,7 +48,9 @@ def import_json_to_sqlite(json_file, sqlite_db):
         "Spese annue scadute" TEXT,
         "Data valutazione" TEXT,
         interessante TEXT,
+        kpi_sconto FLOAT,          
         data_inserimento TEXT
+                
     )
     ''')
 
