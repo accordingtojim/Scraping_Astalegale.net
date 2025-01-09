@@ -1,0 +1,7 @@
+SELECT *
+FROM aste
+WHERE provincia = 'Sondrio'
+  AND "offerta minima" < 60000
+  AND "stato di occupazione" != 'occupato';
+ORDER BY "data asta" DESC;
+
