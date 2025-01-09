@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import messagebox
 from requests.exceptions import RequestException
 import time
+from datetime import datetime
 
 # da riga 12 a 21 può essere anche sostituito semplicemente da do_download = 1
 def ask_user():
@@ -265,6 +266,17 @@ def extract_auction_details(url, save_directory,execute_download):
     fine_iscrizioni_value = fine_iscrizioni_element.find_next('span') if fine_iscrizioni_element else None
     fine_iscrizioni = fine_iscrizioni_value.text.strip() if fine_iscrizioni_value else 'Fine iscrizioni non trovata'
 
+    # Funzione di supporto per correggere la data
+    def clean_DateTime(date_str):    
+        try:
+            # Attempt to parse the date string in DD/MM/YYYY format
+            date_obj = datetime.strptime(date_str, '%d/%m/%Y')
+            # If successful, reformat to YYYY/MM/DD
+            return date_obj.strftime('%Y/%m/%d')
+        except ValueError:
+            # If parsing fails, return the original date string
+            return date_str
+    
     # Data asta
     data_asta_element = soup.find('span', text='Data asta')
     data_asta_value = data_asta_element.find_next('span') if data_asta_element else None
@@ -273,7 +285,7 @@ def extract_auction_details(url, save_directory,execute_download):
     # Rimuovere l'orario dal termine data (manteniamo solo la data)
     # Metodo con split
     data_asta_data = data_asta.split(' ')[0] if data_asta != 'Termine presentazione offerte non trovato' else data_asta
-    
+    data_asta_data = clean_DateTime(data_asta_data)
 
     # Offerta minima
     offerta_min_element = soup.find('span', text='Offerta minima')

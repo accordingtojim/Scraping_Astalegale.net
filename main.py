@@ -30,7 +30,7 @@ if 1:
     links_bz = extract_auction_links_from_page("residenziali","bz","trentino-alto-adige",'all')
     links_tn = extract_auction_links_from_page("residenziali","tn","trentino-alto-adige",'all')
     links = links_so +links_vc+links_vb+links_va+links_ao+links_bz+links_tn+links_bg+links_mi+links_no
-
+    #links = links_bg
 
     for link in links: auctions.append(extract_auction_details(link,'downloads',execute_download))
 
