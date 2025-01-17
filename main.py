@@ -19,6 +19,8 @@ name_dump = 'debug.json'
 if 1:
     execute_download = ask_user()
     #Se passi 'all' ti scarica tutti i links di tutte le pagine che trova
+    links_mb = extract_auction_links_from_page("residenziali","mb","lombardia",'all')
+    links_bs = extract_auction_links_from_page("residenziali","bs","lombardia",'all')
     links_bg = extract_auction_links_from_page("residenziali","bg","lombardia",'all')
     links_mi = extract_auction_links_from_page("residenziali","mi","lombardia",'all')
     links_so = extract_auction_links_from_page("residenziali","so","lombardia",'all')
@@ -30,7 +32,7 @@ if 1:
     links_bz = extract_auction_links_from_page("residenziali","bz","trentino-alto-adige",'all')
     links_tn = extract_auction_links_from_page("residenziali","tn","trentino-alto-adige",'all')
     links = links_so +links_vc+links_vb+links_va+links_ao+links_bz+links_tn+links_bg+links_mi+links_no
-    #links = links_bg
+    
 
     for link in links: auctions.append(extract_auction_details(link,'downloads',execute_download))
 
