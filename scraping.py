@@ -178,94 +178,7 @@ def extract_auction_links_from_page(categoria, provincia, regione, max_pagina):
 
 def extract_auction_details(url, save_directory,execute_download):
 
-    html_content = fetch_html_with_cookies(url)
-    if html_content == None:
-        return None
-    soup = BeautifulSoup(html_content, 'html.parser')
-
-    # Funzione di supporto per cercare elementi con testo flessibile
-    def find_flexible_text(tag, text):
-        return soup.find(tag, text=lambda t: t and text in t)
-
-    # Estrazione della via
-    via_container = soup.find('div', class_='col dettaglio_title d-flex')
-    via_element = via_container.find('h2') if via_container else None
-    via = via_element.text.strip() if via_element else 'Via non trovata'
-
-    # Estrazione del comune
-    comune_container = soup.find('div', class_='dettaglio_luogo')
-    comune_element = comune_container.find('h3', class_='pin-dark') if comune_container else None
-    if comune_element:
-        comune = comune_element.text.strip()
-    else:
-        comune = 'Comune non trovato'
-
-    # Estrai la sigla della provincia
-    provincia_sigla = comune.split('(')[-1].replace(')', '').strip() if '(' in comune else None
-    provincia = province_map.get(provincia_sigla, "Provincia non trovata")
-
-    # Indirizzo
-    indirizzo_element = soup.find('span', {'data-pn-indirizzo-via': 'val'})
-    indirizzo = indirizzo_element.text.strip() if indirizzo_element else 'Indirizzo non trovato'
-
-    # Funzione di supporto per correggere il valore del lotto
-    def clean_lotto(value):
-        value = value.strip().lower()
-        return "1" if value in ["unico", "LOTTO UNICO", "lotto unico"] else value
-
-    # Estrarre e pulire il lotto
-    lotto_element = soup.find('span', text='Lotto')
-    lotto_value = lotto_element.find_next_sibling('span') if lotto_element else None
-    lotto = clean_lotto(lotto_value.text.strip() if lotto_value else 'Lotto non trovato')
     
-    # Categoria
-    categoria_element = soup.find('span', text='Categoria')
-    if categoria_element:
-        categoria_value = categoria_element.find_next_sibling('span')
-        categoria = categoria_value.text.strip() if categoria_value else 'Categoria non trovata'
-    else:
-        categoria = 'Categoria non trovata'
-    
-    # Categoria Ministeriale - non più usata
-    categoria_min_element = soup.find('span', text='Categoria Ministeriale')
-    if categoria_min_element:
-        categoria_min_value = categoria_min_element.find_next_sibling('span')
-        categoria_ministeriale = categoria_min_value.text.strip() if categoria_min_value else 'Categoria ministeriale non trovata'
-    else:
-        categoria_ministeriale = 'Categoria ministeriale non trovata'
-    
-    # Valore di stima
-    valore_stima_element = soup.find('span', text='Valore di stima')
-    valore_stima_value = valore_stima_element.find_next_sibling('span') if valore_stima_element else None
-    valore_stima = clean_prezzi(valore_stima_value.text.strip() if valore_stima_value else 'Valore di stima non trovato')
-    
-    # Tipologia
-    tipologia_element = soup.find('span', text='Tipologia')
-    if tipologia_element:
-        tipologia_value = tipologia_element.find_next_sibling('span')
-        tipologia = tipologia_value.text.strip() if tipologia_value else 'Tipologia non trovata'
-    else:
-        tipologia = 'Tipologia non trovata'
-    
-    # Prezzo
-    prezzo_element = soup.find('span', text='Prezzo')
-    prezzo_value = prezzo_element.find_next_sibling('span') if prezzo_element else None
-    prezzo = clean_prezzi(prezzo_value.text.strip() if prezzo_value else 'Prezzo non trovato')
-    
-    # Termine presentazione offerte
-    termine_offerte_element = soup.find('span', text='Termine presentazione offerte')
-    termine_offerte_value = termine_offerte_element.find_next_sibling('span') if termine_offerte_element else None
-    termine_offerte = termine_offerte_value.text.strip() if termine_offerte_value else 'Termine presentazione offerte non trovato'
-
-    # Rimuovere l'orario dal termine presentazione offerte (manteniamo solo la data)
-    # Metodo con split
-    termine_offerte_data = termine_offerte.split(' ')[0] if termine_offerte != 'Termine presentazione offerte non trovato' else termine_offerte
-    
-    # Fine iscrizioni
-    fine_iscrizioni_element = soup.find('span', text='Fine iscrizioni')
-    fine_iscrizioni_value = fine_iscrizioni_element.find_next('span') if fine_iscrizioni_element else None
-    fine_iscrizioni = fine_iscrizioni_value.text.strip() if fine_iscrizioni_value else 'Fine iscrizioni non trovata'
-
     # Funzione di supporto per correggere la data
     def clean_DateTime(date_str):    
         try:
@@ -276,11 +189,94 @@ def extract_auction_details(url, save_directory,execute_download):
         except ValueError:
             # If parsing fails, return the original date string
             return date_str
+        
+        # Funzione di supporto per correggere il valore del lotto
+    def clean_lotto(value):
+        value = value.strip().lower()
+        return "1" if value in ["unico", "LOTTO UNICO", "lotto unico"] else value
     
+    # Funzione di supporto per correggere lo stato di occupazione
+    def clean_stato_occupazione(value):
+        return stato_occupazione_map.get(value.upper(), value) if value else None
+        
+    html_content = fetch_html_with_cookies(url)
+    if html_content == None:
+        return None
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+       #Deubg Test
+    with open("html.json", 'w', encoding='utf-8') as file:
+        json.dump(html_content, file, indent=4, ensure_ascii=False)
+
+    # Funzione di supporto per cercare elementi con testo flessibile
+    def find_flexible_text(tag, text):
+        return soup.find(tag, text=lambda t: t and text in t)
+    
+    # Estrazione della via
+    # In questo HTML, la via è contenuta nell'elemento <h2> all'interno del div con classe "dettaglio_title"
+    via_container = soup.find('div', class_='dettaglio_title')
+    via_element = via_container.find('h2') if via_container else None
+    via = via_element.text.strip() if via_element else 'Via non trovata'
+
+    # Estrazione del comune
+    # In questo HTML, il comune è contenuto nello <span> con l'attributo md-value="città e provincia"
+    comune_container = soup.find('div', class_='dettaglio_luogo')
+    comune_element = comune_container.find('span', {'md-value': 'città e provincia'}) if comune_container else None
+    comune_text = comune_element.text.strip() if comune_element else 'Comune non trovato'
+    # Se vuoi ottenere solo il nome del comune (senza la sigla tra parentesi), puoi dividere la stringa:
+    comune = comune_text.split('(')[0].strip()
+
+    # Estrazione della provincia
+    if '(' in comune_text and ')' in comune_text:
+        provincia_sigla = comune_text.split('(')[1].split(')')[0].strip()
+    else:
+        provincia = "Provincia non trovata"
+    provincia = province_map.get(provincia_sigla, "Provincia non trovata")
+
+    # Indirizzo ------------------------ rivedere che indirizzo è
+    indirizzo_element = soup.find('span', {'data-pn-indirizzo-via': 'val'})
+    indirizzo = indirizzo_element.text.strip() if indirizzo_element else 'Indirizzo non trovato'
+
+    # Extract Lotto
+    lotto_element = soup.find("span", {"data-pn-lotto-codice": "val"})
+    lotto = lotto_element.text.strip() if lotto_element else "Lotto non trovato"
+
+    # Extract Categoria
+    categoria_element = soup.find("span", {"md-value": "categoria"})
+    categoria = categoria_element.text.strip() if categoria_element else "Categoria non trovata"
+    
+    # Categoria Ministeriale - non più usata
+    categoria_min_element = soup.find('span', text='Categoria Ministeriale')
+    if categoria_min_element:
+        categoria_min_value = categoria_min_element.find_next_sibling('span')
+        categoria_ministeriale = categoria_min_value.text.strip() if categoria_min_value else 'Categoria ministeriale non trovata'
+    else:
+        categoria_ministeriale = 'Categoria ministeriale non trovata'
+    
+    # Valore di stima -------- da rimuovere
+    # valore_stima_element = soup.find('span', text='Valore di stima')
+    # valore_stima_value = valore_stima_element.find_next_sibling('span') if valore_stima_element else None
+    # valore_stima = clean_prezzi(valore_stima_value.text.strip() if valore_stima_value else 'Valore di stima non trovato')
+    
+    # Tipologia
+    tipologia_element = soup.find("span", {"md-value": "tipologia vendita"})
+    tipologia = tipologia_element.text.strip() if tipologia_element else "Tipologia non trovata"
+
+    # Prezzo
+    prezzo_element = soup.find("span", {"md-value": "Prezzo base"})
+    prezzo = prezzo_element.text.strip() if prezzo_element else "Prezzo non trovato"
+
+    # Termine presentazione offerte
+    termine_offerte_element = soup.find("span", {"md-value": "termine presentazione offerte"})
+    termine_offerte = termine_offerte_element.text.strip() if termine_offerte_element else "Termine presentazione offerte non trovato"
+    
+    # Rimuovere l'orario dal termine presentazione offerte (manteniamo solo la data)
+    # Metodo con split
+    termine_offerte_data = termine_offerte.split(' ')[0] if termine_offerte != 'Termine presentazione offerte non trovato' else termine_offerte
+
     # Data asta
-    data_asta_element = soup.find('span', text='Data asta')
-    data_asta_value = data_asta_element.find_next('span') if data_asta_element else None
-    data_asta = data_asta_value.text.strip() if data_asta_value else 'Data asta non trovata'
+    data_asta_element = soup.find("span", {"md-value": "Data Asta"})
+    data_asta = data_asta_element.text.strip() if data_asta_element else "Data asta non trovata"
 
     # Rimuovere l'orario dal termine data (manteniamo solo la data)
     # Metodo con split
@@ -288,14 +284,12 @@ def extract_auction_details(url, save_directory,execute_download):
     data_asta_data = clean_DateTime(data_asta_data)
 
     # Offerta minima
-    offerta_min_element = soup.find('span', text='Offerta minima')
-    offerta_min_value = offerta_min_element.find_next_sibling('span') if offerta_min_element else None
-    offerta_min = clean_prezzi(offerta_min_value.text.strip() if offerta_min_value else 'Offerta minima non trovata')
-    
+    offerta_min_element = soup.find("span", {"md-value": "offerta minima"})
+    offerta_min = offerta_min_element.text.strip() if offerta_min_element else "Offerta minima non trovata"
+
     # Modalità gara
-    modalita_gara_element = soup.find('span', text='Modalità gara')
-    modalita_gara_value = modalita_gara_element.find_next_sibling('span') if modalita_gara_element else None
-    modalita_gara = modalita_gara_value.text.strip() if modalita_gara_value else 'Modalità gara non trovata'
+    modalita_gara_element = soup.find("span", {"md-value": "modalità gara"})
+    modalita_gara = modalita_gara_element.text.strip() if modalita_gara_element else "Modalità gara non trovata"
 
     # Mappa di correzione per lo stato di occupazione
     stato_occupazione_map = {
@@ -307,31 +301,37 @@ def extract_auction_details(url, save_directory,execute_download):
         # Aggiungi altre mappature se necessario
     }
 
-    # Funzione di supporto per correggere lo stato di occupazione
-    def clean_stato_occupazione(value):
-        return stato_occupazione_map.get(value.upper(), value) if value else None
+    
 
     # Estrarre e pulire lo stato di occupazione
-    stato_occupazione_element = soup.find('span', text='Stato di occupazione')
-    stato_occupazione_value = stato_occupazione_element.find_next_sibling('span') if stato_occupazione_element else None
+    # Locate the label span with exact text
+    stato_occupazione_element = soup.find('span', string='Stato di occupazione:')
+
+    # Extract the next relevant span
+    stato_occupazione_value = stato_occupazione_element.find_next_sibling('span', attrs={'data-pn-bene-immobile-disp': 'val'}) if stato_occupazione_element else None
     stato_occupazione = clean_stato_occupazione(stato_occupazione_value.text.strip() if stato_occupazione_value else 'Stato occupazione non trovato')
 
-    # Storico delle aste
+    # Extract auction history
     storico_aste = []
     storico_container = soup.find('ul', class_='storico')
+
     if storico_container:
         for item in storico_container.find_all('li'):
-            data_element = item.find('p', class_='storico-data')
-            prezzo_element_storico = item.find('span')
+            # Extract date (either inside <span> or <a>)
+            data_element = item.find('span', class_='storico-data') or item.find('a', class_='storico-data')
             data = data_element.text.strip() if data_element else 'Data non trovata'
+
+            # Extract auction price (always last <span> in <li>)
+            prezzo_element_storico = item.find_all('span')[-1] if item.find_all('span') else None
             prezzo_storico = prezzo_element_storico.text.strip() if prezzo_element_storico else 'Prezzo non trovato'
+
             storico_aste.append({'data': data, 'prezzo': prezzo_storico})
 
     # Calcolo del numero di aste andate vuote
     numero_aste_vuote = len(storico_aste)
 
     #Indicatore stima/offerta minima
-    kpi_sconto_long = float(offerta_min) / float(valore_stima)
+    kpi_sconto_long = float(offerta_min) / float(prezzo)
     kpi_sconto = math.trunc(kpi_sconto_long * 100) / 100
     kpi_sconto_threshold = 0.65
 
@@ -340,7 +340,7 @@ def extract_auction_details(url, save_directory,execute_download):
         interessante = "1"
     else:
         interessante = ""
-
+#---------------------------------------------------------------------
     auction_id = f"asta_{via.replace('-', '').replace('  ', ' ').replace(' ', '_')}_{comune.replace('-', '').replace('  ', ' ').replace(' ', '_')}"
     auction_id = auction_id + "_" + str(lotto)
     url = f"{url}"
@@ -353,7 +353,7 @@ def extract_auction_details(url, save_directory,execute_download):
         'provincia': provincia, 
         'Indirizzo': indirizzo,
         'Tipologia': tipologia,
-        'Valore di Stima': valore_stima,
+        #'Valore di Stima': valore_stima,
         'Prezzo': prezzo,
         'Offerta Minima': offerta_min,
         'Categoria': categoria,
@@ -382,6 +382,10 @@ def extract_auction_details(url, save_directory,execute_download):
             return
     
         links = document_container.find_all('a', href=True)
+        
+        #Deubg Test
+    with open("html.json", 'w', encoding='utf-8') as file:
+        json.dump(links, file, indent=4, ensure_ascii=False)
 
      # Dizionario per tenere traccia dei conteggi dei file
         file_counters = {'planimetria': 0, 'ordinanza': 0, 'perizia': 0, 'avviso': 0}
@@ -445,6 +449,10 @@ def download_files_from_page(url, auction_directory):
     
     links = document_container.find_all('a', href=True)
     
+    #Deubg Test
+    with open("html.json", 'w', encoding='utf-8') as file:
+        json.dump(soup, file, indent=4, ensure_ascii=False)
+        
     with ThreadPoolExecutor(max_workers=2) as executor:  # Puoi modificare max_workers per regolare il grado di parallelismo
         futures = []
         for link in links:

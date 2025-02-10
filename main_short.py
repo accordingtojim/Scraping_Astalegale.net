@@ -19,19 +19,10 @@ name_dump = 'debug.json'
 if 1:
     execute_download = 1
     #Se passi 'all' ti scarica tutti i links di tutte le pagine che trova
-    links_mb = extract_auction_links_from_page("residenziali","mb","lombardia",'all')
-    links_bs = extract_auction_links_from_page("residenziali","bs","lombardia",'all')
-    links_bg = extract_auction_links_from_page("residenziali","bg","lombardia",'all')
-    links_mi = extract_auction_links_from_page("residenziali","mi","lombardia",'all')
-    links_so = extract_auction_links_from_page("residenziali","so","lombardia",'all')
-    links_va = extract_auction_links_from_page("residenziali","va","lombardia",'all')
+    
     links_vc = extract_auction_links_from_page("residenziali","vc","piemonte",'all')
-    links_vb = extract_auction_links_from_page("residenziali","vb","piemonte",'all')
-    links_no = extract_auction_links_from_page("residenziali","no","piemonte",'all')
-    links_ao = extract_auction_links_from_page("residenziali","ao","valle-daosta",'all')
-    links_bz = extract_auction_links_from_page("residenziali","bz","trentino-alto-adige",'all')
-    links_tn = extract_auction_links_from_page("residenziali","tn","trentino-alto-adige",'all')
-    links = links_so +links_vc+links_vb+links_va+links_ao+links_bz+links_tn+links_bg+links_mi+links_no
+    
+    links = links_vc 
     
     #Debug
     with open("links.json", 'w', encoding='utf-8') as file:
